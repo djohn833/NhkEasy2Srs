@@ -36,6 +36,8 @@ def get_text(soup):
 def make_sentence_card(cards, sentenceSoup, headline=''):
   try:
     expression, reading = get_text(sentenceSoup)
+    if not headline or len(headline) == 0:
+      headline = expression
     cards.write("\t".join([expression, reading, headline, articleUrl]) + "\n")
 
     return expression, reading
