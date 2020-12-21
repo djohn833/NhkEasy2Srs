@@ -49,8 +49,24 @@ with open('cards.tsv', 'a') as cards:
   headline, _ = make_sentence_card(cards, title)
 
   for paragraph in soup.find(class_='article-main__body').find_all('p'):
-    for sentenceBytes in paragraph.encode_contents().split(bytes('。', 'utf8')):
-      if len(sentenceBytes) > 0:
-        sentence = sentenceBytes.decode('utf8') + '。'
-        sentenceSoup = BeautifulSoup(sentence, 'html.parser')
-        make_sentence_card(cards, sentenceSoup, headline)
+    paragraphText = paragraph.encode_contents().decode('utf8')
+
+    sentences = []
+    currSentence = ''
+    numQuotes = 0
+    for c in paragraphText:
+      currSentence += c
+      if c == '「':
+        numQuotes += 1
+      elif c == '」':
+        numQuotes -= 1
+      elif c == '。' and numQuotes == 0:
+        sentences.append(currSentence)
+        currSentence = ''
+
+    if len(currSentence) > 0:
+      sentences.append(currSentence)
+
+    for sentence in sentences:
+      sentenceSoup = BeautifulSoup(sentence, 'html.parser')
+      make_sentence_card(cards, sentenceSoup, headline)
