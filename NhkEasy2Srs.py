@@ -7,7 +7,7 @@ import sys
 from bs4 import BeautifulSoup
 from bs4.element import NavigableString
 
-# articleUrl = 'https://www3.nhk.or.jp/news/easy/k10012766351000/k10012766351000.html
+# articleUrl = 'https://www3.nhk.or.jp/news/easy/k10012766351000/k10012766351000.html'
 articleUrl = sys.argv[1]
 
 r = requests.get(articleUrl)
@@ -29,20 +29,37 @@ def get_text(soup):
       expression += node.string
       reading += node.string
 
-  expression = expression.strip()
-  reading = reading.strip()
   return expression, reading
 
 def make_sentence_card(cards, sentenceSoup, headline=''):
-  try:
-    expression, reading = get_text(sentenceSoup)
-    if not headline or len(headline) == 0:
-      headline = expression
-    cards.write("\t".join([expression, reading, headline, articleUrl]) + "\n")
+  expression, reading = get_text(sentenceSoup)
+  expression = expression.strip()
+  reading = reading.strip()
+  if not headline or len(headline) == 0:
+    headline = expression
+  cards.write("\t".join([expression, reading, headline, articleUrl]) + "\n")
 
-    return expression, reading
-  except:
-    print(sentenceSoup)
+  return expression, reading
+
+def splitParagraphIntoSentences(paragraphText):
+  sentences = []
+  currSentence = ''
+  numQuotes = 0
+
+  for c in paragraphText:
+    currSentence += c
+    if c == '「':
+      numQuotes += 1
+    elif c == '」':
+      numQuotes -= 1
+    elif c == '。' and numQuotes == 0:
+      sentences.append(currSentence)
+      currSentence = ''
+
+  if len(currSentence) > 0:
+    sentences.append(currSentence)
+
+  return sentences
 
 with open('cards.tsv', 'a') as cards:
   title = soup.find('h1', class_='article-main__title')
@@ -51,21 +68,7 @@ with open('cards.tsv', 'a') as cards:
   for paragraph in soup.find(class_='article-main__body').find_all('p'):
     paragraphText = paragraph.encode_contents().decode('utf8')
 
-    sentences = []
-    currSentence = ''
-    numQuotes = 0
-    for c in paragraphText:
-      currSentence += c
-      if c == '「':
-        numQuotes += 1
-      elif c == '」':
-        numQuotes -= 1
-      elif c == '。' and numQuotes == 0:
-        sentences.append(currSentence)
-        currSentence = ''
-
-    if len(currSentence) > 0:
-      sentences.append(currSentence)
+    sentences = splitParagraphIntoSentences(paragraphText)
 
     for sentence in sentences:
       sentenceSoup = BeautifulSoup(sentence, 'html.parser')
