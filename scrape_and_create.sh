@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo Get links...
-ts-node NhkEasyScrape.ts >> links.txt
+ts-node NhkEasyScrape.ts > links.txt
 sort -u links.txt -o links.txt
 
 echo Turning links into cards...
