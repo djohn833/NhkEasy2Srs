@@ -107,6 +107,7 @@ def cardsFromPage(soup: BeautifulSoup):
     yield card
 
 
-with redirect_stdout(open('cards.tsv', 'a')):
-  for card in cardsFromPage(soup):
-    print(card)
+with open('cards.tsv', 'a') as f:
+  with redirect_stdout(f):
+    for card in cardsFromPage(soup):
+      print(card)
